@@ -321,7 +321,7 @@ async function yivue() {
             // 正则查找组件css数据
             await data_html.replace(regx_css, (match, style) => {
                 style = style.trim().replace(regx_placeholder, (_, n) => {
-                    return "component-" + name_base;
+                    return name_base;
                 });
                 // 缓存页面css资源
                 html_css.push(`\n${style}\n`);
@@ -426,7 +426,7 @@ async function yivue() {
                 //console.log(style.trim().replace(regx_placeholder, "000"));
                 // 先处理占位符
                 style = style.trim().replace(regx_placeholder, (_, n) => {
-                    return "page-" + name_base;
+                    return name_base;
                 });
                 // 缓存页面css资源
                 html_css.push(`\n${style}\n`);
@@ -523,7 +523,7 @@ yivue();
 // 缓冲变量，避免频繁打包
 let timeold = Date.now();
 let timenew = 0;
-let timeout = 500;
+let timeout = 1000;
 let watcher = chokidar
     .watch(path.join(config_dir, "src"), {
         ignored: /(^|[\/\\])\../
