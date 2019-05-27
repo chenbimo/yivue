@@ -450,7 +450,7 @@ async function yivue() {
         fs.writeFileSync(path.join(dist_dir, "pages.js"), js_pages.join(""));
 
         // 生成路由文件
-        fs.writeFileSync(path.join(dist_dir, "route.js"), js_routes.join(""));
+        fs.writeFileSync(path.join(dist_dir, "routes.js"), js_routes.join(""));
 
         let lessRes = await lessCompile([...css_array, ...html_css].join(""), {});
 
