@@ -81,7 +81,7 @@ async function yivue() {
 
         // 页面模板正则字符
         // let str_template = "[\\s\\S]*<.*template.*>([\\s\\S]+?)</.*template.*>";
-        let str_template = "<template>([\\s\\S]+?)</template>";
+        let str_template = "<yv-template>([\\s\\S]+?)</yv-template>";
 
         // 正则字符-数据 -保留
         let str_data = str_default_start + "data" + str_default_end;
