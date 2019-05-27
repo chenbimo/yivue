@@ -444,7 +444,7 @@ async function yivue() {
         fs.writeFileSync(path.join(dist_dir, "datas.js"), js_datas.join(""));
 
         // 生成组件文件
-        fs.writeFileSync(path.join(dist_dir, "compontents.js"), js_components.join(""));
+        fs.writeFileSync(path.join(dist_dir, "components.js"), js_components.join(""));
 
         // 生成页面文件
         fs.writeFileSync(path.join(dist_dir, "pages.js"), js_pages.join(""));
