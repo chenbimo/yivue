@@ -37,6 +37,13 @@ async function yivue() {
         if (!prop.status) {
             continue;
         }
+
+        // 是否填写项目名称
+        if (!prop.name) {
+            console.log(colors.red("请填写项目名称 " + JSON.stringify(p)));
+            check_success = false;
+            break;
+        }
         // 为每个单页项目初始化相关变量 ==============================================
         // 组件模板数组
         let html_components = [];
@@ -134,13 +141,6 @@ async function yivue() {
 
         // 正则-css脚本
         let regx_css = new RegExp(str_css, "gi");
-
-        // 是否填写项目名称
-        if (!prop.name) {
-            console.log(colors.red("请填写项目名称 " + JSON.stringify(p)));
-            check_success = false;
-            break;
-        }
 
         // 根据参数生成目录和路径 ===================================================
         // 源码目录
