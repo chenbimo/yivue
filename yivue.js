@@ -13,9 +13,6 @@ const colors = require("colors/safe");
 // 引入文件监听模块
 const chokidar = require("chokidar");
 
-// 引入工具函数
-const tool = require("./tool");
-
 // 引入less
 const lessCompile = require("./lessCompile");
 
@@ -53,7 +50,7 @@ async function yivue() {
         // 单组件、单页面的js脚本
 
         // 数据文件 - 保留
-        // let js_datas = [];
+        let js_datas = [];
 
         // 组件脚本文件
         let js_components = [];
@@ -76,10 +73,11 @@ async function yivue() {
         let str_default_end = "[\"']?>([\\s\\S]+?)</script>";
 
         // 页面模板正则字符
-        let str_template = "[\\s\\S]*<template>([\\s\\S]+?)</template>";
+        // let str_template = "[\\s\\S]*<.*template.*>([\\s\\S]+?)</.*template.*>";
+        let str_template = "<template>([\\s\\S]+?)</template>";
 
         // 正则字符-数据 -保留
-        // let str_data = str_default_start + "data" + str_default_end;
+        let str_data = str_default_start + "data" + str_default_end;
 
         // 正则字符-组件
         let str_component = str_default_start + "component" + str_default_end;
@@ -91,7 +89,8 @@ async function yivue() {
         let str_route = str_default_start + "route" + str_default_end;
 
         // 正则字符-css
-        let str_css = "[\\s\\S]*<style.*>([\\s\\S]+?)</style>";
+        // let str_css = "[\\s\\S]*<style>([\\s\\S]+?)</style>";
+        let str_css = "<style>([\\s\\S]+?)</style>";
 
         // 文件读取
 
@@ -122,7 +121,7 @@ async function yivue() {
         let regx_template = new RegExp(str_template, "gi");
 
         // 正则-数据 - 保留
-        // let regx_data = new RegExp(str_data, "gi");
+        let regx_data = new RegExp(str_data, "gi");
 
         // 正则-组件脚本
         let regx_component = new RegExp(str_component, "gi");
@@ -162,7 +161,7 @@ async function yivue() {
             css_dir = "css",
 
             // 生成的数据文件默认名称
-            // data_file = "datas.js",
+            data_file = "datas.js",
 
             // 生成的组件文件默认名称
             component_file = "components.js",
@@ -283,25 +282,43 @@ async function yivue() {
 
             // 检测是否有模板数据
             if (!regx_template.test(data_html)) {
-                console.log(colors.red(`项目名称<${name}>  类型<组件/模板>  文件名<${prop.name}>  未找到...`));
+                console.log(colors.red(`项目名称<${name}>  类型<组件模板>  文件名<${prop.name}>  未找到...`));
                 check_data = false;
                 break;
             }
 
             // 检测是否有组件脚本
             if (!regx_component.test(data_html)) {
-                console.log(colors.red(`项目名称<${name}>  类型<组件/脚本>  文件名<${prop.name}>  未找到...`));
+                console.log(colors.red(`项目名称<${name}>  类型<组件脚本>  文件名<${prop.name}>  未找到...`));
                 check_data = false;
                 break;
             }
 
-            // 正则查找模板元素数据
+            // 正则查找页面元素
             data_html.replace(regx_template, (match, template) => {
                 template = template.trim().replace(regx_placeholder, (_, n) => {
                     return name_base;
                 });
                 // 缓存组件模板资源
                 html_components.push(`<script type="text/html" id="${name_component}">\n${template}\n</script>\n`);
+            });
+
+            // 正则查找组件数据
+            data_html.replace(regx_data, (match, data) => {
+                data = data
+                    .trim()
+                    .replace(/^([\S\s]+?)\{/gi, (_, s) => {
+                        return "{";
+                    })
+                    .replace(/\}\;$/gi, (_, n) => {
+                        // 去掉路由结束扩后后面的分号
+                        return "}";
+                    })
+                    .replace(regx_placeholder, (_, n) => {
+                        return name_base;
+                    });
+                // 缓存组件脚本资源
+                js_datas.push(`yivue.datas["${name_component}"] = ${data}\n\n`);
             });
 
             // 正则查找组件脚本数据
@@ -359,7 +376,7 @@ async function yivue() {
 
             // 检测是否有模板
             if (!regx_template.test(data_html)) {
-                console.log(colors.red(`项目名称<${name}>  类型<模板>  文件名<${prop.name}>  未找到...`));
+                console.log(colors.red(`项目名称<${name}>  类型<页面模板>  文件名<${prop.name}>  未找到...`));
                 check_data = false;
                 break;
             }
@@ -385,6 +402,24 @@ async function yivue() {
                 });
                 // 缓存页面模板资源
                 html_pages.push(`<script type="text/html" id="${name_page}">\n${template}\n</script>\n`);
+            });
+
+            // 正则查找组件数据
+            data_html.replace(regx_data, (match, data) => {
+                data = data
+                    .trim()
+                    .replace(/^([\S\s]+?)\{/gi, (_, s) => {
+                        return "{";
+                    })
+                    .replace(/\}\;$/gi, (_, n) => {
+                        // 去掉路由结束扩后后面的分号
+                        return "}";
+                    })
+                    .replace(regx_placeholder, (_, n) => {
+                        return name_base;
+                    });
+                // 缓存组件脚本资源
+                js_datas.push(`yivue.datas["${name_page}"] = ${data}\n\n`);
             });
 
             // 正则查找页面脚本
@@ -470,7 +505,7 @@ async function yivue() {
         // 文件生成 ========================================================
 
         // 生成数据文件
-        //fs.writeFileSync(path.join(dist_dir, data_file), 'var yivue_datas = {};\n\n' + js_datas.join(''));
+        fs.writeFileSync(path.join(dist_dir, data_file), js_datas.join(""));
 
         // 生成组件文件
         fs.writeFileSync(path.join(dist_dir, component_file), js_components.join(""));
@@ -512,7 +547,7 @@ async function yivue() {
             console.log(colors.red(name + " 处理失败...\n"));
         } else {
             console.log("---------------------------------");
-            console.log(colors.bgCyan(tool.DateTime()));
+            console.log(colors.bgCyan(DateTime()));
             console.log("---------------------------------");
         }
     }
@@ -523,22 +558,42 @@ yivue();
 // 缓冲变量，避免频繁打包
 let timeold = Date.now();
 let timenew = 0;
-let timeout = 1000;
+let timeout = 500;
+
+// 延迟执行，我也不知道为什么要写这个
+// 但是不写会报错
+let timer = null;
+
+// 监听执行函数
+function watchExecute() {
+    timenew = Date.now();
+    if (timenew - timeold > timeout) {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            yivue();
+            timeold = timenew;
+        }, 500);
+    }
+}
+
+// 日期函数
+function DateTime() {
+    var t = new Date();
+    var Y = t.getFullYear();
+    var M = ("00" + (t.getMonth() + 1)).substr(-2);
+    var D = ("00" + t.getDate()).substr(-2);
+    var H = ("00" + t.getHours()).substr(-2);
+    var I = ("00" + t.getMinutes()).substr(-2);
+    var S = ("00" + t.getSeconds()).substr(-2);
+    return Y + "-" + M + "-" + D + " " + H + ":" + I + ":" + S;
+}
 let watcher = chokidar
     .watch(path.join(config_dir, "src"), {
         ignored: /(^|[\/\\])\../
     })
     .on("unlink", path => {
-        timenew = Date.now();
-        if (timenew - timeold > timeout) {
-            yivue();
-            timeold = timenew;
-        }
+        watchExecute();
     })
     .on("change", path => {
-        timenew = Date.now();
-        if (timenew - timeold > timeout) {
-            yivue();
-            timeold = timenew;
-        }
+        watchExecute();
     });
