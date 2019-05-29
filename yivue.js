@@ -119,7 +119,7 @@ async function yivue() {
         let check_exists = true;
 
         // 模板文件名占位符 - 有bug，待定
-        let placeholder = "ddd";
+        let placeholder = "xxx";
 
         // 正则-模板 - 有bug，待定
         let regx_placeholder = new RegExp(placeholder, "gi");
