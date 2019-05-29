@@ -452,7 +452,10 @@ async function yivue() {
         // 生成路由文件
         fs.writeFileSync(path.join(dist_dir, "routes.js"), js_routes.join(""));
 
-        let lessRes = await lessCompile([...css_array, ...html_css].join(""), {});
+        let lessRes = await lessCompile([...css_array, ...html_css].join(""), {}).catch(error => {
+            console.log(colors.red("LESS编译错误，请检查CSS代码"));
+            return { code: false, data: "" };
+        });
 
         // 生成样式文件
         fs.writeFileSync(path.join(dist_dir, "bundle.css"), lessRes.code ? lessRes.data : "");
