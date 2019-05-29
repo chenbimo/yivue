@@ -16,6 +16,12 @@ const chokidar = require("chokidar");
 // 引入less
 const lessCompile = require("./lessCompile");
 
+// autoprefixer插件
+const LessPluginAutoPrefix = require("less-plugin-autoprefix");
+
+// 实例化
+const autoprefixPlugin = new LessPluginAutoPrefix({ browsers: ["last 2 versions"] });
+
 // 初始化配置参数 ==============================================================
 // 配置目录
 const config_dir = process.cwd();
@@ -452,7 +458,7 @@ async function yivue() {
         // 生成路由文件
         fs.writeFileSync(path.join(dist_dir, "routes.js"), js_routes.join(""));
 
-        let lessRes = await lessCompile([...css_array, ...html_css].join(""), {}).catch(error => {
+        let lessRes = await lessCompile([...css_array, ...html_css].join(""), { plugins: [autoprefixPlugin] }).catch(error => {
             console.log(colors.red("LESS编译错误，请检查CSS代码"));
             return { code: false, data: "" };
         });
