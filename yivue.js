@@ -77,6 +77,9 @@ async function yivue() {
         // 独立css合并文件
         let css_array = [];
 
+        // 独立js合并文件
+        let js_array = [];
+
         // 正则字符
 
         // 正则字符-默认-开始
@@ -163,6 +166,9 @@ async function yivue() {
 
         // css目录
         let from_css = path.join(src_dir, "css");
+
+        // js目录
+        let from_js = path.join(src_dir, "js");
 
         // 静态网页模板文件
         let from_html = path.join(src_dir, "tpl.html");
@@ -438,6 +444,27 @@ async function yivue() {
             css_array.push(data_css);
         }
 
+        // 开始处理js资源 ======================================================
+        // 获取所有文件
+        files_all = fs.readdirSync(from_js, { withFileTypes: true });
+
+        // 过滤所有非 .css或.less 文件
+        files_filter = files_all.filter(v => {
+            return v.isFile() && path.extname(v.name) === ".js";
+        });
+
+        // 循环读取所有js
+        for (let prop of files_filter) {
+            // 当前css路径
+            let path_js = path.join(from_js, prop.name);
+
+            // 当前组件页面数据
+            let data_js = fs.readFileSync(path_js, { encoding: "utf8" });
+
+            // 推送到数组
+            js_array.push(data_js);
+        }
+
         // 数据判断中断
         if (check_data === false) {
             check_success = false;
@@ -463,8 +490,11 @@ async function yivue() {
             return { code: false, data: "" };
         });
 
-        // 生成样式文件
+        // 生成打包样式文件
         fs.writeFileSync(path.join(dist_dir, "bundle.css"), lessRes.code ? lessRes.data : "");
+
+        // 生成打包脚本文件
+        fs.writeFileSync(path.join(dist_dir, "bundle.js"), js_array.join(""));
 
         // 读 html 模板文件
         let data_from_html = fs.readFileSync(path.join(src_dir, "tpl.html"), { encoding: "utf8" });
