@@ -523,6 +523,12 @@ async function yivue() {
         // 生成 store.js 文件
         fs.writeFileSync(path.join(dist_dir, "store.js"), data_from_store);
 
+        // 读 router.js 模板文件
+        let data_from_router = fs.readFileSync(path.join(src_dir, "router.js"), { encoding: "utf8" });
+
+        // 生成 router.js 文件
+        fs.writeFileSync(path.join(dist_dir, "router.js"), data_from_router);
+
         // 成功判断
         if (check_success === false) {
             console.log(colors.red(prop.name + " 处理失败...\n"));
