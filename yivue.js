@@ -40,7 +40,7 @@ async function yivue() {
     for (let prop of config_data) {
         // 如果状态为false，则跳过处理
         // 此参数可以过滤掉不需要打包的项目，增加性能
-        if (!prop.status) {
+        if (prop.status === false) {
             continue;
         }
 
@@ -51,6 +51,7 @@ async function yivue() {
             break;
         }
         // 为每个单页项目初始化相关变量 ==============================================
+        let project_name = prop.name;
         // 组件模板数组
         let html_components = [];
 
@@ -186,13 +187,15 @@ async function yivue() {
         if (!fs.existsSync(dist_dir)) {
             fs.mkdirSync(path.join(dist_dir), { recursive: true });
         }
-
+        /**
+         * 此处需要修改：调整必备目录和文件的检测
+         */
         // 需要被检测的参数数组 ==================================================
         let check_params = [src_dir, dist_dir, components_dir, pages_dir, from_css, from_html, from_app, from_config, from_store];
 
         for (let prop of check_params) {
             if (!fs.existsSync(prop)) {
-                console.log(colors.red(`项目名称<${prop.name}>  类型<目录/文件>  目录地址<${prop}>  不存在...`));
+                console.log(colors.red(`项目名称<${project_name}>  类型<目录/文件>  目录地址<${prop}>  不存在...`));
                 check_exists = false;
                 break;
             }
@@ -229,14 +232,14 @@ async function yivue() {
 
             // 检测是否有模板数据
             if (!regx_template.test(data_html)) {
-                console.log(colors.red(`项目名称<${prop.name}>  类型<组件模板>  文件名<${prop.name}>  未找到...`));
+                console.log(colors.red(`项目名称<${project_name}>  类型<组件模板>  文件名<${prop.name}>  未找到...`));
                 check_data = false;
                 break;
             }
 
             // 检测是否有组件脚本
             if (!regx_component.test(data_html)) {
-                console.log(colors.red(`项目名称<${prop.name}>  类型<组件脚本>  文件名<${prop.name}>  未找到...`));
+                console.log(colors.red(`项目名称<${project_name}>  类型<组件脚本>  文件名<${prop.name}>  未找到...`));
                 check_data = false;
                 break;
             }
@@ -290,7 +293,7 @@ async function yivue() {
                 // 缓存页面css资源
                 html_css.push(`\n${style}\n`);
             });
-            console.log(colors.green(`项目名称<${prop.name}>  类型<组件>  文件名<${prop.name}>  处理完成...`));
+            console.log(colors.green(`项目名称<${project_name}>  类型<组件>  文件名<${prop.name}>  处理完成...`));
         }
         // 数据存在性判断
         if (check_data === false) {
@@ -323,21 +326,21 @@ async function yivue() {
 
             // 检测是否有模板
             if (!regx_template.test(data_html)) {
-                console.log(colors.red(`项目名称<${prop.name}>  类型<页面模板>  文件名<${prop.name}>  未找到...`));
+                console.log(colors.red(`项目名称<${project_name}>  类型<页面模板>  文件名<${prop.name}>  未找到...`));
                 check_data = false;
                 break;
             }
 
             // 检测是否有页面
             if (!regx_page.test(data_html)) {
-                console.log(colors.red(`项目名称<${prop.name}>  类型<页面脚本>  文件名<${prop.name}>  未找到...`));
+                console.log(colors.red(`项目名称<${project_name}>  类型<页面脚本>  文件名<${prop.name}>  未找到...`));
                 check_data = false;
                 break;
             }
 
             // 检测是否有路由
             if (!regx_route.test(data_html)) {
-                console.log(colors.red(`项目名称<${prop.name}>  类型<页面路由>  文件名<${prop.name}>  未找到...`));
+                console.log(colors.red(`项目名称<${project_name}>  类型<页面路由>  文件名<${prop.name}>  未找到...`));
                 check_data = false;
                 break;
             }
@@ -415,7 +418,7 @@ async function yivue() {
             });
 
             // 打印日志
-            console.log(colors.green(`项目名称<${prop.name}>  类型<页面>  文件名<${prop.name}>  处理完成...`));
+            console.log(colors.green(`项目名称<${project_name}>  类型<页面>  文件名<${prop.name}>  处理完成...`));
         }
 
         // 开始处理css资源 ======================================================
@@ -505,36 +508,32 @@ async function yivue() {
         // 生成首页文件
         fs.writeFileSync(path.join(dist_dir, "index.html"), data_to_html);
 
-        // 读 app.js 模板文件
-        let data_from_app = fs.readFileSync(path.join(src_dir, "app.js"), { encoding: "utf8" });
+        // 开始处理源码根目录下的所有js资源 ======================================================
+        // 获取所有文件
+        files_all = fs.readdirSync(src_dir, { withFileTypes: true });
 
-        // 生成 app.js 文件
-        fs.writeFileSync(path.join(dist_dir, "app.js"), data_from_app);
+        // 过滤所有非 .css或.less 文件
+        files_filter = files_all.filter(v => {
+            return v.isFile() && path.extname(v.name) === ".js";
+        });
 
-        // 读 config.js 模板文件
-        let data_from_config = fs.readFileSync(path.join(src_dir, "config.js"), { encoding: "utf8" });
+        // 循环读取所有js
+        for (let prop of files_filter) {
+            // 当前css路径
+            let path_js = path.join(src_dir, prop.name);
 
-        // 生成 config.js 文件
-        fs.writeFileSync(path.join(dist_dir, "config.js"), data_from_config);
+            // 当前组件页面数据
+            let data_js = fs.readFileSync(path_js, { encoding: "utf8" });
 
-        // 读 store.js 模板文件
-        let data_from_store = fs.readFileSync(path.join(src_dir, "store.js"), { encoding: "utf8" });
-
-        // 生成 store.js 文件
-        fs.writeFileSync(path.join(dist_dir, "store.js"), data_from_store);
-
-        // 读 router.js 模板文件
-        let data_from_router = fs.readFileSync(path.join(src_dir, "router.js"), { encoding: "utf8" });
-
-        // 生成 router.js 文件
-        fs.writeFileSync(path.join(dist_dir, "router.js"), data_from_router);
+            fs.writeFileSync(path.join(dist_dir, prop.name), data_js);
+        }
 
         // 成功判断
         if (check_success === false) {
             console.log(colors.red(prop.name + " 处理失败...\n"));
         } else {
             console.log("---------------------------------");
-            console.log(colors.bgCyan(DateTime()));
+            console.log(colors.bgCyan(DateTime() + " >>> 项目" + project_name));
             console.log("---------------------------------");
         }
     }
