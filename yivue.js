@@ -34,6 +34,8 @@ if (!fs.existsSync(config_file)) {
 }
 // 配置数据
 const config_data = require(config_file);
+// 构建次数
+let count = 1;
 
 async function yivue() {
     // 循环处理多个单页项目 =========================================================
@@ -533,7 +535,7 @@ async function yivue() {
             console.log(colors.red(prop.name + " 处理失败...\n"));
         } else {
             console.log("---------------------------------");
-            console.log(colors.bgCyan(DateTime() + " >>> 项目" + project_name));
+            console.log(colors.bgCyan(`构建次数: < ${count++} > 构建时间: < ${DateTime()}> 项目名称: < ${project_name} >`));
             console.log("---------------------------------");
         }
     }
